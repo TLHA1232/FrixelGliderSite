@@ -258,6 +258,14 @@
   <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script> <!-- Font Awesome Kit -->
 
   <script>
+    // Load content from localStorage on page load
+    window.onload = function() {
+      const savedContent = localStorage.getItem('editorContent');
+      if (savedContent) {
+        document.getElementById("editor").innerHTML = savedContent;
+      }
+    };
+
     // Function to format text (bold, italic, underline)
     function formatText(command) {
       document.execCommand(command, false, null);
@@ -273,17 +281,24 @@
 
     // Function to undo the last action
     function undoAction() {
-      document.execCommand('undo', false, null);
-      saveProgress(); // Save progress after undoing
+      document.execCommand("undo");
+      saveProgress(); // Save progress after undo
     }
 
     // Function to redo the last undone action
     function redoAction() {
-      document.execCommand('redo', false, null);
-      saveProgress(); // Save progress after redoing
+      document.execCommand("redo");
+      saveProgress(); // Save progress after redo
     }
 
-    // Open the modal
+    // Save progress to localStorage
+    function saveProgress() {
+      const content = document.getElementById("editor").innerHTML;
+      localStorage.setItem('editorContent', content);
+      console.log("Progress saved!"); // Temporary placeholder
+    }
+
+    // Open the modal for exporting PDF
     function openModal() {
       document.getElementById("pdfModal").style.display = "block";
     }
@@ -293,46 +308,27 @@
       document.getElementById("pdfModal").style.display = "none";
     }
 
-    // Export content to PDF
+    // Export to PDF
     function exportToPDF() {
-      const { jsPDF } = window.jspdf;
-      const doc = new jsPDF();
+      const { jsPDF } = window.jspdf; // Get jsPDF from the global window object
+      const pdf = new jsPDF();
+      const fileName = document.getElementById("pdfFileName").value || "document";
+      const content = document.getElementById("editor").innerText; // Use innerText for plain text
       
-      const content = document.getElementById('editor').innerHTML;
-      doc.fromHTML(content, 10, 10);
-      
-      // Get file name from input or set a default name
-      const fileName = document.getElementById('pdfFileName').value || 'document.pdf';
-      
-      // Save the PDF
-      doc.save(fileName);
-      closeModal();
+      pdf.text(content, 10, 10); // Adjust positioning as needed
+      pdf.save(`${fileName}.pdf`);
+      closeModal(); // Close modal after export
     }
 
-    // Save the content of the editor to localStorage
-    function saveProgress() {
-      const content = document.getElementById('editor').innerHTML;
-      localStorage.setItem('editorContent', content);
-    }
-
-    // Load the content from localStorage when the page is loaded
-    function loadProgress() {
-      const savedContent = localStorage.getItem('editorContent');
-      if (savedContent) {
-        document.getElementById('editor').innerHTML = savedContent;
-      }
-    }
-
-    // Load progress on page load
-    window.onload = loadProgress;
-
-    // Show the mobile banner if the user is on a mobile device
-    if (window.innerWidth <= 768) {
-      document.getElementById('mobileBanner').style.display = 'flex';
+    // Check for mobile device
+    if (/Mobi|Android/i.test(navigator.userAgent)) {
+      document.getElementById("mobileBanner").style.display = "flex"; // Show mobile banner
+      document.querySelector('.container').style.display = 'none'; // Hide editor
     }
   </script>
 </body>
 </html>
+
 
 
 
