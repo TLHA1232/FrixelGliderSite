@@ -215,7 +215,7 @@
   <div class="mobile-banner" id="mobileBanner">
     <i class="fas fa-desktop"></i> <!-- Font Awesome Desktop Icon -->
     <h2>This Site Is Best Used On Desktop Devices</h2>
-    <p>Please switch to a desktop to continue.</p>
+    <p>Please switch to a desktop to continue using.</p>
   </div>
 
   <div class="container">
@@ -261,22 +261,26 @@
     // Function to format text (bold, italic, underline)
     function formatText(command) {
       document.execCommand(command, false, null);
+      saveProgress(); // Save progress after formatting text
     }
 
     // Function to change font size
     function changeFontSize() {
       var size = document.getElementById("fontSize").value;
       document.execCommand("fontSize", false, size);
+      saveProgress(); // Save progress after changing font size
     }
 
     // Function to undo the last action
     function undoAction() {
       document.execCommand('undo', false, null);
+      saveProgress(); // Save progress after undoing
     }
 
     // Function to redo the last undone action
     function redoAction() {
       document.execCommand('redo', false, null);
+      saveProgress(); // Save progress after redoing
     }
 
     // Open the modal
@@ -305,6 +309,23 @@
       closeModal();
     }
 
+    // Save the content of the editor to localStorage
+    function saveProgress() {
+      const content = document.getElementById('editor').innerHTML;
+      localStorage.setItem('editorContent', content);
+    }
+
+    // Load the content from localStorage when the page is loaded
+    function loadProgress() {
+      const savedContent = localStorage.getItem('editorContent');
+      if (savedContent) {
+        document.getElementById('editor').innerHTML = savedContent;
+      }
+    }
+
+    // Load progress on page load
+    window.onload = loadProgress;
+
     // Show the mobile banner if the user is on a mobile device
     if (window.innerWidth <= 768) {
       document.getElementById('mobileBanner').style.display = 'flex';
@@ -312,6 +333,7 @@
   </script>
 </body>
 </html>
+
 
 
 
