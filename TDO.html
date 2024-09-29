@@ -185,7 +185,7 @@
       left: 0;
       width: 100%;
       height: 100vh;
-      background-color: rgba(255, 0, 0, 0.8);
+      background-color: red; /* Changed to solid red */
       color: white;
       z-index: 999;
       flex-direction: column;
@@ -215,7 +215,7 @@
   <div class="mobile-banner" id="mobileBanner">
     <i class="fas fa-desktop"></i> <!-- Font Awesome Desktop Icon -->
     <h2>This Site Is Best Used On Desktop Devices</h2>
-    <p>Please switch to a desktop to continue using this site!</p>
+    <p>Please switch to a desktop to continue using.</p>
   </div>
 
   <div class="container">
@@ -279,22 +279,21 @@
       document.execCommand('redo', false, null);
     }
 
-    // Open modal for PDF export
+    // Open the modal
     function openModal() {
-      document.getElementById('pdfModal').style.display = 'block';
+      document.getElementById("pdfModal").style.display = "block";
     }
 
-    // Close modal
+    // Close the modal
     function closeModal() {
-      document.getElementById('pdfModal').style.display = 'none';
+      document.getElementById("pdfModal").style.display = "none";
     }
 
-    // Function to export content to PDF using jsPDF
+    // Export content to PDF
     function exportToPDF() {
       const { jsPDF } = window.jspdf;
       const doc = new jsPDF();
-
-      // Get the content from the editor
+      
       const content = document.getElementById('editor').innerHTML;
       doc.fromHTML(content, 10, 10);
       
@@ -313,5 +312,6 @@
   </script>
 </body>
 </html>
+
 
 
