@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Text Editor</title>
+  <title>Online Text Editor</title>
   <style>
     /* Basic Reset */
     * {
@@ -176,13 +176,47 @@
       text-decoration: none;
       cursor: pointer;
     }
+
+    /* Mobile Banner Styling */
+    .mobile-banner {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background-color: rgba(255, 0, 0, 0.8);
+      color: white;
+      z-index: 999;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      padding: 20px;
+    }
+
+    .mobile-banner h2 {
+      font-size: 2rem;
+      margin-bottom: 10px;
+    }
+
+    .mobile-banner i {
+      font-size: 3rem;
+      margin-bottom: 15px;
+    }
   </style>
 </head>
 <body>
 
   <header>
-    <h1>Text Editor</h1>
+    <h1>Online Text Editor</h1>
   </header>
+
+  <div class="mobile-banner" id="mobileBanner">
+    <i class="fas fa-desktop"></i> <!-- Font Awesome Desktop Icon -->
+    <h2>This Site Is Best Used On Desktop Devices</h2>
+    <p>Please switch to a desktop to continue using this site!</p>
+  </div>
 
   <div class="container">
     <div class="toolbar">
@@ -221,7 +255,8 @@
 
   <!-- Import jsPDF library -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  
+  <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script> <!-- Font Awesome Kit -->
+
   <script>
     // Function to format text (bold, italic, underline)
     function formatText(command) {
@@ -260,34 +295,23 @@
       const doc = new jsPDF();
 
       // Get the content from the editor
-      var text = document.getElementById("editor").innerText;
+      const content = document.getElementById('editor').innerHTML;
+      doc.fromHTML(content, 10, 10);
       
-      // Get the file name from the modal input
-      var fileName = document.getElementById("pdfFileName").value;
+      // Get file name from input or set a default name
+      const fileName = document.getElementById('pdfFileName').value || 'document.pdf';
       
-      if (!fileName) {
-        fileName = 'document'; // Default file name
-      }
-
-      // Add the content to the PDF
-      doc.text(text, 10, 10);
-
-      // Save the PDF with the specified name
-      doc.save(fileName + ".pdf");
-
-      // Close the modal
+      // Save the PDF
+      doc.save(fileName);
       closeModal();
     }
 
-    // Close the modal if user clicks outside the modal
-    window.onclick = function(event) {
-      var modal = document.getElementById('pdfModal');
-      if (event.target == modal) {
-        modal.style.display = "none";
-      }
+    // Show the mobile banner if the user is on a mobile device
+    if (window.innerWidth <= 768) {
+      document.getElementById('mobileBanner').style.display = 'flex';
     }
   </script>
-
 </body>
 </html>
+
 
