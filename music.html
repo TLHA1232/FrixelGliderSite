@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Ambient Music Player</title>
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
+
+    <!-- Font Awesome for Play Button Icon -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+
+    <!-- CSS Styling -->
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            padding: 20px;
+            color: white;
+            transition: background-color 0.5s ease;
+            backdrop-filter: blur(8px); /* Glass effect */
+            background: rgba(0, 0, 0, 0.6); /* Dark background */
+        }
+
+        #player-container {
+            background-color: rgba(255, 255, 255, 0.1); /* Glass effect */
+            border-radius: 20px;
+            padding: 20px;
+            width: 300px; /* Initial width */
+            text-align: center;
+            box-shadow: 0px 15px 40px rgba(0, 0, 0, 0.3);
+            position: relative;
+            transition: transform 0.6s ease, width 0.6s ease, background-color 0.6s ease; /* Smoother expansion */
+        }
+
+        #player-container.expanded {
+            width: 400px; /* Expanded width */
+            transform: scale(1.05); /* Slight scaling for animation */
+            background-color: rgba(255, 255, 255, 0.2); /* Lighter on expand */
+        }
+
+        #album-art-container {
+            position: relative;
+            overflow: hidden;
+            border-radius: 15px;
+            height: 250px;
+            width: 250px;
+            margin: 0 auto;
+            margin-bottom: 20px;
+            box-shadow: 0px 0px 20px rgba(255, 255, 255, 0.3);
+            transition: box-shadow 0.4s ease;
+        }
+
+        #album-art {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: filter 0.4s ease, transform 0.3s ease;
+        }
+
+        #add-song-icon {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(255, 255, 255, 0.9);
+            color: #667eea;
+            padding: 10px;
+            border-radius: 50%;
+            font-size: 28px;
+            cursor: pointer;
+            box-shadow: 0px 6px 15px rgba(0, 0, 0, 0.15);
+            z-index: 10;
+            opacity: 0; /* Start hidden */
+            transition: opacity 0.3s, transform 0.3s;
+        }
+
+        #album-art-container:hover #add-song-icon {
+            opacity: 1; /* Show on hover */
+            transform: translate(-50%, -50%) scale(1.1); /* Slightly scale up */
+        }
+
+        #track-info h2 {
+            color: white;
+            font-weight: 700;
+            font-size: 20px;
+            margin-bottom: 5px;
+        }
+
+        #track-info p {
+            color: white;
+            font-weight: 400;
+            font-size: 16px;
+            margin-top: 0;
+        }
+
+        #play-button {
+            background: rgba(255, 255, 255, 0.3);
+            border: none;
+            cursor: pointer;
+            font-size: 40px;
+            color: #667eea;
+            margin-top: 10px;
+            border-radius: 50%;
+            padding: 10px;
+            box-shadow: 0px 6px 15px rgba(0, 0, 0, 0.15);
+            transition: transform 0.3s, background 0.3s;
+            width: 60px;
+            height: 60px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-left: auto; /* Center the button */
+            margin-right: auto; /* Center the button */
+        }
+
+        #play-button:hover {
+            transform: scale(1.1);
+            background: rgba(255, 255, 255, 0.5);
+        }
+
+        #progress-bar {
+            margin-top: 20px;
+            width: 100%;
+        }
+
+        #progress-bar input[type="range"] {
+            width: 100%;
+            -webkit-appearance: none;
+            background: #e0e0e0;
+            height: 8px;
+            border-radius: 5px;
+            outline: none;
+            transition: background-color 0.4s ease;
+        }
+
+        #progress-bar input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #667eea;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        #progress-bar input[type="range"]:hover::-webkit-slider-thumb {
+            background: #b39ddb;
+        }
+    </style>
+</head>
+<body class="no-song">
+
+    <div id="player-container">
+        <div id="album-art-container">
+            <img id="album-art" src="default-art.jpg" >
+            <div id="add-song-icon">+</div>
+        </div>
+
+        <div id="track-info">
+            <h2 id="track-title">Track Title</h2>
+            <p id="track-artist">Artist Name</p>
+        </div>
+
+        <input type="file" id="file-input" accept="audio/*" style="display: none;">
+        <audio id="audio-player" style="display: none;"></audio>
+
+        <button id="play-button" style="display: none;">
+            <i class="fas fa-play"></i>
+        </button>
+
+        <div id="progress-bar">
+            <input type="range" id="seek-bar" value="0" min="0" max="100">
+        </div>
+    </div>
+
+    <!-- JS for functionality -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jsmediatags/3.9.5/jsmediatags.min.js"></script>
+    <script>
+        const fileInput = document.getElementById('file-input');
+        const audioPlayer = document.getElementById('audio-player');
+        const albumArt = document.getElementById('album-art');
+        const trackTitle = document.getElementById('track-title');
+        const trackArtist = document.getElementById('track-artist');
+        const addSongIcon = document.getElementById('add-song-icon');
+        const playerContainer = document.getElementById('player-container');
+        const playButton = document.getElementById('play-button');
+        const seekBar = document.getElementById('seek-bar');
+        const body = document.body;
+
+        // Function to calculate average color
+        function getAverageColor(imageData) {
+            let r = 0, g = 0, b = 0;
+            const length = imageData.length / 4;
+            for (let i = 0; i < imageData.length; i += 4) {
+                r += imageData[i];
+                g += imageData[i + 1];
+                b += imageData[i + 2];
+            }
+            return { r: Math.floor(r / length), g: Math.floor(g / length), b: Math.floor(b / length) };
+        }
+
+        // Handle click on add song icon
+        addSongIcon.addEventListener('click', function() {
+            fileInput.click(); // Trigger file input when icon is clicked
+        });
+
+        // Handle file input change event (song upload)
+        fileInput.addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const fileURL = URL.createObjectURL(file);
+                audioPlayer.src = fileURL;
+                audioPlayer.style.display = 'block';
+
+                // Load audio metadata
+                jsmediatags.read(file, {
+                    onSuccess: function(tag) {
+                        const { title, artist, picture } = tag.tags;
+
+                        // Set track title and artist
+                        trackTitle.textContent = title || 'Unknown Title';
+                        trackArtist.textContent = artist || 'Unknown Artist';
+
+                        // Check if album art is available
+                        if (picture) {
+                            const base64String = arrayBufferToBase64(picture.data);
+                            const imageUrl = `data:${picture.format};base64,${base64String}`;
+                            albumArt.src = imageUrl;
+
+                            // Get album colors
+                            const img = new Image();
+                            img.src = imageUrl;
+                            img.onload = function() {
+                                const canvas = document.createElement('canvas');
+                                canvas.width = img.width;
+                                canvas.height = img.height;
+                                const ctx = canvas.getContext('2d');
+                                ctx.drawImage(img, 0, 0);
+                                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+                                const averageColor = getAverageColor(imageData);
+
+                                // Apply colors to background
+                                body.style.backgroundColor = `rgb(${averageColor.r}, ${averageColor.g}, ${averageColor.b})`;
+                                playerContainer.style.backgroundColor = `rgba(${averageColor.r}, ${averageColor.g}, ${averageColor.b}, 0.3)`;
+                            };
+                        } else {
+                            albumArt.src = 'default-art.jpg'; // Use a default image
+                        }
+
+                        // Expand player container
+                        playerContainer.classList.add('expanded');
+
+                        // Show play button
+                        playButton.style.display = 'flex'; // Centering with flex
+                        playButton.innerHTML = '<i class="fas fa-play"></i>'; // Reset to play icon
+
+                        // Initialize audio controls
+                        initializeAudioControls();
+                    },
+                    onError: function(error) {
+                        console.error('Error reading audio file:', error);
+                    }
+                });
+
+                // Show album art container
+                albumArt.classList.add('show-art');
+            }
+        });
+
+        // Play button functionality
+        playButton.addEventListener('click', function() {
+            if (audioPlayer.paused) {
+                audioPlayer.play();
+                albumArt.classList.add('playing-art');
+                playButton.innerHTML = '<i class="fas fa-pause"></i>'; // Change icon to pause
+            } else {
+                audioPlayer.pause();
+                albumArt.classList.remove('playing-art');
+                playButton.innerHTML = '<i class="fas fa-play"></i>'; // Change icon to play
+            }
+        });
+
+        // Function to update seek bar
+        function updateSeekBar() {
+            const value = (audioPlayer.currentTime / audioPlayer.duration) * 100;
+            seekBar.value = value;
+        }
+
+        // Event listeners for audio player
+        audioPlayer.addEventListener('timeupdate', updateSeekBar);
+        seekBar.addEventListener('input', function() {
+            const value = seekBar.value;
+            audioPlayer.currentTime = (audioPlayer.duration / 100) * value;
+        });
+
+        audioPlayer.addEventListener('ended', function() {
+            albumArt.classList.remove('playing-art');
+            playButton.innerHTML = '<i class="fas fa-play"></i>'; // Reset play button to play
+        });
+
+        function arrayBufferToBase64(buffer) {
+            let binary = '';
+            const bytes = new Uint8Array(buffer);
+            const len = bytes.byteLength;
+            for (let i = 0; i < len; i++) {
+                binary += String.fromCharCode(bytes[i]);
+            }
+            return window.btoa(binary);
+        }
+    </script>
+</body>
+</html>
