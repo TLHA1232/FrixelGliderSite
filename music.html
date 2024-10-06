@@ -39,7 +39,7 @@
             padding: 20px;
             width: 300px; /* Initial width */
             text-align: center;
-            box-shadow: 0px 15px 40px rgba(0, 0, 0, 0.3);
+            box-shadow: 0px 15px 40px rgba(255, 255, 255, 0.3);
             position: relative;
             transition: transform 0.6s ease, width 0.6s ease, background-color 0.6s ease; /* Smoother expansion */
         }
@@ -119,13 +119,39 @@
             width: 60px;
             height: 60px;
             display: flex;
-            justify-content: center;
-            align-items: center;
+            justify-content: center; /* Center the button */
+            align-items: center; /* Center the button */
             margin-left: auto; /* Center the button */
             margin-right: auto; /* Center the button */
         }
 
         #play-button:hover {
+            transform: scale(1.1);
+            background: rgba(255, 255, 255, 0.5);
+        }
+
+        .nav-buttons {
+            display: flex;
+            justify-content: center; /* Center the buttons */
+            margin-top: 10px; /* Add margin above the buttons */
+        }
+
+        .nav-button {
+            background: rgba(255, 255, 255, 0.3);
+            border: none;
+            cursor: pointer;
+            font-size: 30px;
+            color: #667eea;
+            margin: 0 10px; /* Add some margin for spacing */
+            border-radius: 50%;
+            padding: 10px;
+            box-shadow: 0px 6px 15px rgba(0, 0, 0, 0.15);
+            transition: transform 0.3s, background 0.3s;
+            width: 50px;
+            height: 50px;
+        }
+
+        .nav-button:hover {
             transform: scale(1.1);
             background: rgba(255, 255, 255, 0.5);
         }
@@ -165,7 +191,7 @@
 
     <div id="player-container">
         <div id="album-art-container">
-            <img id="album-art" src="default-art.jpg" >
+            <img id="album-art" src="default-art.jpg" alt="Album Art">
             <div id="add-song-icon">+</div>
         </div>
 
@@ -174,12 +200,20 @@
             <p id="track-artist">Artist Name</p>
         </div>
 
-        <input type="file" id="file-input" accept="audio/*" style="display: none;">
+        <input type="file" id="file-input" accept="audio/*" multiple style="display: none;">
         <audio id="audio-player" style="display: none;"></audio>
 
-        <button id="play-button" style="display: none;">
-            <i class="fas fa-play"></i>
-        </button>
+        <div class="nav-buttons" style="display: none;">
+            <button id="prev-button" class="nav-button">
+                <i class="fas fa-backward"></i>
+            </button>
+            <button id="play-button">
+                <i class="fas fa-play"></i>
+            </button>
+            <button id="next-button" class="nav-button">
+                <i class="fas fa-forward"></i>
+            </button>
+        </div>
 
         <div id="progress-bar">
             <input type="range" id="seek-bar" value="0" min="0" max="100">
@@ -197,129 +231,148 @@
         const addSongIcon = document.getElementById('add-song-icon');
         const playerContainer = document.getElementById('player-container');
         const playButton = document.getElementById('play-button');
+        const prevButton = document.getElementById('prev-button');
+        const nextButton = document.getElementById('next-button');
         const seekBar = document.getElementById('seek-bar');
         const body = document.body;
 
-        // Function to calculate average color
-        function getAverageColor(imageData) {
-            let r = 0, g = 0, b = 0;
-            const length = imageData.length / 4;
-            for (let i = 0; i < imageData.length; i += 4) {
-                r += imageData[i];
-                g += imageData[i + 1];
-                b += imageData[i + 2];
-            }
-            return { r: Math.floor(r / length), g: Math.floor(g / length), b: Math.floor(b / length) };
+        let songList = [];
+        let currentSongIndex = 0;
+
+        // Function to update the player UI with song info
+        function updatePlayerUI() {
+            const song = songList[currentSongIndex];
+            trackTitle.textContent = song.title || 'Unknown Title';
+            trackArtist.textContent = song.artist || 'Unknown Artist';
+            albumArt.src = song.albumArt || 'default-art.jpg';
+            playerContainer.classList.add('expanded'); // Expand player on song add
+
+            // Extract colors from album art
+            extractColor(song.albumArt);
+
+            // Show navigation buttons
+            document.querySelector('.nav-buttons').style.display = 'flex';
+            body.classList.remove('no-song'); // Remove no-song class on song added
         }
 
-        // Handle click on add song icon
-        addSongIcon.addEventListener('click', function() {
-            fileInput.click(); // Trigger file input when icon is clicked
-        });
+        // Function to extract the predominant color from the album art
+        function extractColor(imageSrc) {
+            const img = new Image();
+            img.src = imageSrc;
+            img.crossOrigin = "Anonymous"; // Handle cross-origin images
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                const context = canvas.getContext('2d');
+                canvas.width = img.width;
+                canvas.height = img.height;
+                context.drawImage(img, 0, 0, img.width, img.height);
+                const imageData = context.getImageData(0, 0, img.width, img.height);
+                const data = imageData.data;
 
-        // Handle file input change event (song upload)
-        fileInput.addEventListener('change', function(event) {
-            const file = event.target.files[0];
-            if (file) {
-                const fileURL = URL.createObjectURL(file);
-                audioPlayer.src = fileURL;
-                audioPlayer.style.display = 'block';
+                // Count colors
+                const colorCount = {};
+                for (let i = 0; i < data.length; i += 4) {
+                    const r = data[i];
+                    const g = data[i + 1];
+                    const b = data[i + 2];
+                    const colorKey = `${r},${g},${b}`;
+                    colorCount[colorKey] = (colorCount[colorKey] || 0) + 1;
+                }
 
-                // Load audio metadata
+                // Find the most common color
+                const predominantColor = Object.keys(colorCount).reduce((a, b) => colorCount[a] > colorCount[b] ? a : b);
+                body.style.backgroundColor = `rgba(${predominantColor}, 0.6)`; // Update body background color
+                playerContainer.style.backgroundColor = `rgba(${predominantColor}, 0.2)`; // Update player background color
+            };
+        }
+
+        // Function to handle file selection
+        fileInput.addEventListener('change', (event) => {
+            const files = Array.from(event.target.files);
+            files.forEach((file) => {
+                // Use jsmediatags to read the audio file's metadata
                 jsmediatags.read(file, {
-                    onSuccess: function(tag) {
-                        const { title, artist, picture } = tag.tags;
+                    onSuccess: function (tag) {
+                        const albumArtData = tag.tags.picture ? 
+                            `data:${tag.tags.picture.format};base64,${btoa(String.fromCharCode.apply(null, tag.tags.picture.data))}` : 
+                            'default-art.jpg';
 
-                        // Set track title and artist
-                        trackTitle.textContent = title || 'Unknown Title';
-                        trackArtist.textContent = artist || 'Unknown Artist';
+                        const song = {
+                            title: tag.tags.title,
+                            artist: tag.tags.artist,
+                            albumArt: albumArtData,
+                            url: URL.createObjectURL(file)
+                        };
 
-                        // Check if album art is available
-                        if (picture) {
-                            const base64String = arrayBufferToBase64(picture.data);
-                            const imageUrl = `data:${picture.format};base64,${base64String}`;
-                            albumArt.src = imageUrl;
-
-                            // Get album colors
-                            const img = new Image();
-                            img.src = imageUrl;
-                            img.onload = function() {
-                                const canvas = document.createElement('canvas');
-                                canvas.width = img.width;
-                                canvas.height = img.height;
-                                const ctx = canvas.getContext('2d');
-                                ctx.drawImage(img, 0, 0);
-                                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
-                                const averageColor = getAverageColor(imageData);
-
-                                // Apply colors to background
-                                body.style.backgroundColor = `rgb(${averageColor.r}, ${averageColor.g}, ${averageColor.b})`;
-                                playerContainer.style.backgroundColor = `rgba(${averageColor.r}, ${averageColor.g}, ${averageColor.b}, 0.3)`;
-                            };
+                        songList.push(song);
+                        if (songList.length === 1) {
+                            // Start playing the first song immediately after it's added
+                            playSong(0);
                         } else {
-                            albumArt.src = 'default-art.jpg'; // Use a default image
+                            updatePlayerUI(); // Update UI for additional songs
                         }
-
-                        // Expand player container
-                        playerContainer.classList.add('expanded');
-
-                        // Show play button
-                        playButton.style.display = 'flex'; // Centering with flex
-                        playButton.innerHTML = '<i class="fas fa-play"></i>'; // Reset to play icon
-
-                        // Initialize audio controls
-                        initializeAudioControls();
                     },
-                    onError: function(error) {
-                        console.error('Error reading audio file:', error);
+                    onError: function (error) {
+                        console.error('Error reading file metadata:', error);
                     }
                 });
+            });
 
-                // Show album art container
-                albumArt.classList.add('show-art');
-            }
+            // Reset file input
+            event.target.value = '';
         });
 
-        // Play button functionality
-        playButton.addEventListener('click', function() {
+        // Function to play the current song
+        function playSong(index) {
+            if (songList.length > 0) {
+                currentSongIndex = index;
+                audioPlayer.src = songList[currentSongIndex].url;
+                audioPlayer.play();
+                updatePlayerUI();
+            }
+        }
+
+        // Add event listener to play button
+        playButton.addEventListener('click', () => {
             if (audioPlayer.paused) {
                 audioPlayer.play();
-                albumArt.classList.add('playing-art');
                 playButton.innerHTML = '<i class="fas fa-pause"></i>'; // Change icon to pause
             } else {
                 audioPlayer.pause();
-                albumArt.classList.remove('playing-art');
                 playButton.innerHTML = '<i class="fas fa-play"></i>'; // Change icon to play
             }
         });
 
-        // Function to update seek bar
-        function updateSeekBar() {
-            const value = (audioPlayer.currentTime / audioPlayer.duration) * 100;
-            seekBar.value = value;
-        }
-
-        // Event listeners for audio player
-        audioPlayer.addEventListener('timeupdate', updateSeekBar);
-        seekBar.addEventListener('input', function() {
-            const value = seekBar.value;
-            audioPlayer.currentTime = (audioPlayer.duration / 100) * value;
+        // Add event listener to previous button
+        prevButton.addEventListener('click', () => {
+            currentSongIndex = (currentSongIndex - 1 + songList.length) % songList.length;
+            playSong(currentSongIndex);
         });
 
-        audioPlayer.addEventListener('ended', function() {
-            albumArt.classList.remove('playing-art');
-            playButton.innerHTML = '<i class="fas fa-play"></i>'; // Reset play button to play
+        // Add event listener to next button
+        nextButton.addEventListener('click', () => {
+            currentSongIndex = (currentSongIndex + 1) % songList.length;
+            playSong(currentSongIndex);
         });
 
-        function arrayBufferToBase64(buffer) {
-            let binary = '';
-            const bytes = new Uint8Array(buffer);
-            const len = bytes.byteLength;
-            for (let i = 0; i < len; i++) {
-                binary += String.fromCharCode(bytes[i]);
-            }
-            return window.btoa(binary);
-        }
+        // Update seek bar as the song plays
+        audioPlayer.addEventListener('timeupdate', () => {
+            const progress = (audioPlayer.currentTime / audioPlayer.duration) * 100;
+            seekBar.value = progress;
+        });
+
+        // Seek functionality
+        seekBar.addEventListener('input', () => {
+            const newTime = (seekBar.value / 100) * audioPlayer.duration;
+            audioPlayer.currentTime = newTime;
+        });
+
+        // Trigger file input when add song icon is clicked
+        addSongIcon.addEventListener('click', () => {
+            fileInput.click();
+        });
+
     </script>
 </body>
 </html>
+
