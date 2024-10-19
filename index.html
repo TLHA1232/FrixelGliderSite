@@ -48,7 +48,7 @@
             animation: pulseGlow 2s infinite;
         }
 
-        .download-button, .feedback-button {
+        .countdown-button {
             display: inline-block;
             padding: 15px 30px;
             background-color: transparent;
@@ -60,13 +60,26 @@
             transition: background-color 0.3s, transform 0.2s;
             margin-top: 20px;
             font-size: 1.2rem;
-            position: relative; /* Ensures buttons are above other content */
-            z-index: 2; /* Higher than sections */
+            position: relative;
+            z-index: 2;
+            animation: glow 1.5s infinite;
         }
 
-        .download-button:hover, .feedback-button:hover {
+        .countdown-button:hover {
             background-color: rgba(0, 255, 255, 0.1);
             transform: scale(1.05);
+        }
+
+        @keyframes glow {
+            0% {
+                box-shadow: 0 0 5px #00ffff, 0 0 10px #00ffff;
+            }
+            50% {
+                box-shadow: 0 0 20px #00ffff, 0 0 30px #00ffff;
+            }
+            100% {
+                box-shadow: 0 0 5px #00ffff, 0 0 10px #00ffff;
+            }
         }
 
         .section {
@@ -135,7 +148,6 @@
             background-image: url('https://i.imghippo.com/files/i0W6l1726915326.jpg');
         }
 
-        /* New Intuitive Gameplay Section Background */
         .duplicated-intuitive-gameplay::before {
             background-image: url('https://i.imghippo.com/files/GoGJi1729274707.png');
         }
@@ -192,7 +204,7 @@
             .section h2 {
                 font-size: 1.5rem;
             }
-            .feedback-button, .download-button {
+            .countdown-button {
                 font-size: 1rem;
                 padding: 10px 20px;
             }
@@ -232,7 +244,21 @@
             position: fixed;
             bottom: 20px;
             right: 20px;
+            padding: 15px 30px;
+            background-color: transparent;
+            color: #00ffff;
+            border: 2px solid #00ffff;
+            border-radius: 10px;
+            text-decoration: none;
+            font-family: 'Open Sans', sans-serif;
+            transition: background-color 0.3s, transform 0.2s;
+            font-size: 1.2rem;
             z-index: 10; /* Ensure it's above other elements */
+        }
+
+        .feedback-button:hover {
+            background-color: rgba(0, 255, 255, 0.1);
+            transform: scale(1.05);
         }
 
         .close-button {
@@ -255,7 +281,8 @@
     <div id="particles-js"></div>
     <header class="header">
         <h1 class="header-title">FrixelGlider: The Cubic Odyssey</h1>
-        <a href="https://www.dropbox.com/scl/fi/lraouy16d7nfcrv9460gq/FrixelGlider.apk?rlkey=p1m87a7lf01i9augiqt4nd5v4&st=sihuecei&dl=1" class="download-button">Download</a>
+        <!-- Countdown Button -->
+        <div id="countdown" class="countdown-button">Loading countdown...</div>
     </header>
 
     <!-- Sections -->
@@ -292,8 +319,10 @@
         </div>
     </section>
 
-    <!-- Feedback Button and Modal -->
-    <button class="feedback-button" onclick="toggleFeedbackForm()">Feedback</button>
+    <!-- Feedback Button in the bottom corner -->
+    <a href="#" class="feedback-button" onclick="toggleFeedbackForm()">Feedback</a>
+
+    <!-- Feedback Modal -->
     <div id="feedbackModal" class="feedback-modal">
         <div class="feedback-form">
             <button class="close-button" onclick="toggleFeedbackForm()">✖</button>
@@ -393,6 +422,27 @@
                 document.querySelector('.feedback-button').style.display = 'block'; // Show button again when closing
             }
         }
+
+        // Countdown Timer
+        function updateCountdown() {
+            const countdownElement = document.getElementById("countdown");
+            const targetDate = new Date("October 25, 2024 00:00:00").getTime();
+            const now = new Date().getTime();
+            const timeRemaining = targetDate - now;
+
+            if (timeRemaining > 0) {
+                const days = Math.floor(timeRemaining / (1000 * 60 * 60 * 24));
+                const hours = Math.floor((timeRemaining % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                const minutes = Math.floor((timeRemaining % (1000 * 60 * 60)) / (1000 * 60));
+                const seconds = Math.floor((timeRemaining % (1000 * 60)) / 1000);
+                countdownElement.textContent = `${days}d ${hours}h ${minutes}m ${seconds}s`;
+            } else {
+                countdownElement.textContent = "Event is live!";
+            }
+        }
+
+        // Update countdown every second
+        setInterval(updateCountdown, 1000);
     </script>
 </body>
 </html>
